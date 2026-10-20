@@ -14,7 +14,7 @@
     <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false" />
 
     <application
-        android:label="PC &amp; Body-mind"
+        android:label="Amable PC"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
         android:allowBackup="true"

@@ -45,7 +45,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: app-${{ github.run_number }}
-          name: PC & Body-mind v${{ env.VERSION_NAME }}
+          name: Amable PC v${{ env.VERSION_NAME }}
           body: |
             Descarga **PC-Body-mind.apk** en el móvil y ábrelo para instalar o actualizar.
             Enlace fijo a la última versión: https://github.com/${{ github.repository }}/releases/latest/download/PC-Body-mind.apk
