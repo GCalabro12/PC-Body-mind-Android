@@ -278,6 +278,11 @@ public class MainActivity extends Activity {
             sendToService(new Intent(StepService.ACTION_SPEAK).putExtra("text", text));
         }
 
+        /** La web avisa cada pocos segundos de si el PC está conectado; si deja de avisar, el teléfono vuelve a hablar. */
+        @JavascriptInterface public void pcLink(boolean linked) {
+            StepService.pcUntil = linked ? System.currentTimeMillis() + 20_000 : 0;
+        }
+
         @JavascriptInterface public void addSteps(int n) {
             int[] r = StepStore.addManual(MainActivity.this, n);
             sendToService(new Intent(StepService.ACTION_MANUAL).putExtra("before", r[0]).putExtra("after", r[1]));

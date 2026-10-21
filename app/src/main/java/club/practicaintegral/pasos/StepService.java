@@ -52,6 +52,8 @@ public class StepService extends Service implements SensorEventListener {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private long lastNotif;
     static boolean hasSensor = true;
+    /** Hasta cuándo el PC está conectado: mientras dure, la web da los avisos de pasos en el PC y el teléfono calla. */
+    static volatile long pcUntil = 0;
 
     @Override
     public void onCreate() {
@@ -165,6 +167,7 @@ public class StepService extends Service implements SensorEventListener {
             text = "¡Has cumplido la meta del día!";
         }
         if (text == null) return;
+        if (System.currentTimeMillis() < pcUntil) return; // los avisos suenan en el PC
         playTone(cfg.optString("sound", "campana"));
         if (goalHit) vibrate();
         final String t = text;
