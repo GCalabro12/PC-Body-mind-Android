@@ -283,6 +283,14 @@ public class MainActivity extends Activity {
             StepService.pcUntil = linked ? System.currentTimeMillis() + 20_000 : 0;
         }
 
+        /** Abre el menú de compartir de Android (el navigator.share no funciona en el WebView). */
+        @JavascriptInterface public void share(String text) {
+            runOnUiThread(() -> {
+                Intent i = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text);
+                startActivity(Intent.createChooser(i, "Recomendar Amable PC"));
+            });
+        }
+
         @JavascriptInterface public void addSteps(int n) {
             int[] r = StepStore.addManual(MainActivity.this, n);
             sendToService(new Intent(StepService.ACTION_MANUAL).putExtra("before", r[0]).putExtra("after", r[1]));
