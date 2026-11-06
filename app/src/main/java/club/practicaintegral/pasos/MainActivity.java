@@ -278,6 +278,13 @@ public class MainActivity extends Activity {
             sendToService(new Intent(StepService.ACTION_SPEAK).putExtra("text", text));
         }
 
+        /** Entrar con Google con el selector de cuentas de Android; el resultado llega a window.googleNativo(token, error). */
+        @JavascriptInterface public void entrarGoogle(String clientId) {
+            runOnUiThread(() -> Google.entrar(MainActivity.this, clientId, (token, error) ->
+                runOnUiThread(() -> web.evaluateJavascript("window.googleNativo && window.googleNativo("
+                    + JSONObject.quote(token) + "," + JSONObject.quote(error) + ")", null))));
+        }
+
         /** La web avisa cada pocos segundos de si el PC está conectado; si deja de avisar, el teléfono vuelve a hablar. */
         @JavascriptInterface public void pcLink(boolean linked) {
             StepService.pcUntil = linked ? System.currentTimeMillis() + 20_000 : 0;
