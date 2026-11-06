@@ -49,6 +49,7 @@ public class MainActivity extends Activity {
     private WebView web;
     private LinearLayout overlay;
     private TextView overlayText;
+    private Button retryBtn, webViewBtn; // solo se ven si algo falla
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final List<String> jsErrors = new ArrayList<>();
     private boolean loaded, problem;
@@ -78,8 +79,8 @@ public class MainActivity extends Activity {
     private final Runnable liveSteps = new Runnable() {
         @Override public void run() {
             if (!problem && overlay.getVisibility() == View.VISIBLE) {
-                overlayText.setText("👣\n\n" + String.format(new java.util.Locale("es", "ES"), "%,d", StepStore.steps(MainActivity.this))
-                        + " pasos hoy\n\nCargando la pantalla…");
+                overlayText.setText(String.format(new java.util.Locale("es", "ES"), "%,d", StepStore.steps(MainActivity.this))
+                        + " pasos hoy\n\nCargando…");
             }
             handler.postDelayed(this, 2000);
         }
@@ -166,26 +167,43 @@ public class MainActivity extends Activity {
         overlay.setBackgroundColor(0xFF0F172A);
         int pad = (int) (24 * getResources().getDisplayMetrics().density);
         overlay.setPadding(pad, pad, pad, pad);
+        // Pantalla de carga: logotipo, nombre y pasos de hoy. Los botones de arreglo solo salen si algo falla.
+        android.widget.ImageView logo = new android.widget.ImageView(this);
+        logo.setImageResource(R.mipmap.ic_launcher);
+        int lg = (int) (88 * getResources().getDisplayMetrics().density);
+        overlay.addView(logo, new LinearLayout.LayoutParams(lg, lg));
+        TextView title = new TextView(this);
+        title.setText("Amable PC");
+        title.setTextColor(0xFFFACC15);
+        title.setTextSize(28);
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setPadding(0, pad / 2, 0, pad / 2);
+        overlay.addView(title);
         overlayText = new TextView(this);
-        overlayText.setTextColor(0xFFF8FAFC);
+        overlayText.setTextColor(0xFFCBD5E1);
         overlayText.setTextSize(17);
         overlayText.setGravity(Gravity.CENTER);
-        overlayText.setText("👣\n\nCargando Pasos…\n\nEl contador ya está funcionando aunque esta pantalla tarde.");
+        overlayText.setText("Cargando…");
         overlay.addView(overlayText);
-        Button retry = new Button(this);
-        retry.setText("↻ Reintentar");
-        retry.setOnClickListener(v -> {
+        retryBtn = new Button(this);
+        retryBtn.setText("↻ Reintentar");
+        retryBtn.setVisibility(View.GONE);
+        retryBtn.setOnClickListener(v -> {
             loaded = false; problem = false; jsErrors.clear();
-            overlayText.setText("👣\n\nCargando Pasos…");
+            retryBtn.setVisibility(View.GONE); webViewBtn.setVisibility(View.GONE);
+            overlayText.setTextSize(17);
+            overlayText.setText("Cargando…");
             if (web == null) { initWeb(); return; }
             web.loadUrl(WEB);
             handler.postDelayed(() -> { if (!loaded) showProblem("La página no termina de cargar."); }, 20000);
         });
-        overlay.addView(retry);
-        Button webView = new Button(this);
-        webView.setText("Actualizar «Android System WebView»");
-        webView.setOnClickListener(v -> openStore("com.google.android.webview"));
-        overlay.addView(webView);
+        overlay.addView(retryBtn);
+        webViewBtn = new Button(this);
+        webViewBtn.setText("Actualizar «Android System WebView»");
+        webViewBtn.setVisibility(View.GONE);
+        webViewBtn.setOnClickListener(v -> openStore("com.google.android.webview"));
+        overlay.addView(webViewBtn);
         return overlay;
     }
 
@@ -204,6 +222,7 @@ public class MainActivity extends Activity {
         for (String e : jsErrors) sb.append("\n• ").append(e);
         overlayText.setText(sb.toString());
         overlayText.setTextSize(14);
+        retryBtn.setVisibility(View.VISIBLE); webViewBtn.setVisibility(View.VISIBLE);
         overlay.setVisibility(View.VISIBLE);
     }
 
