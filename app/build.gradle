@@ -40,6 +40,8 @@ android {
 
 dependencies {
     // Entrar con Google (selector de cuentas de Android): Google no deja abrir su ventana dentro de un WebView
+    // Hace falta en Android 8 a 13: el selector de Google usa androidx.activity.ComponentActivity (sin esto la app se cierra al pulsar el botón)
+    implementation 'androidx.activity:activity:1.9.3'
     implementation 'androidx.credentials:credentials:1.3.0'
     implementation 'androidx.credentials:credentials-play-services-auth:1.3.0'
     implementation 'com.google.android.libraries.identity.googleid:googleid:1.1.1'
