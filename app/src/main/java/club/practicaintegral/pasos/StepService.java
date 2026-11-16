@@ -161,9 +161,9 @@ public class StepService extends Service implements SensorEventListener {
             text = "¡Enhorabuena! Ya has alcanzado " + (k * block) + " pasos. Bloque " + k + " completado.";
             if (goalHit) text += " ¡Y has cumplido la meta del día!";
         } else if (voice && after / every > before / every) {
-            // «Llevas 500, 1000, 1500…»; en el último 30 % del bloque: «Te faltan X pasos para terminar el bloque» (igual que la web)
+            // «Llevas 500, 1000, 1500…»; solo cuando faltan 500 o menos para acabar el bloque: «Te faltan X pasos para terminar el bloque» (igual que la web)
             int n = (after / every) * every, w = n % block;
-            if (w != 0 && w * 10 >= block * 7) text = "Te faltan " + (block - w) + " pasos para terminar el bloque.";
+            if (w != 0 && block - w <= 500) text = "Te faltan " + (block - w) + " pasos para terminar el bloque.";
             else text = "Llevas " + n + " pasos.";
             if (goalHit) text += " ¡Has cumplido la meta del día!";
         } else if (goalHit) {
