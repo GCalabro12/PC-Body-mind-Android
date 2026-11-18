@@ -17,6 +17,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.Gravity;
 import android.view.View;
+import android.view.WindowManager;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
 import android.webkit.SslErrorHandler;
@@ -51,6 +52,7 @@ public class MainActivity extends Activity {
     private TextView overlayText;
     private Button retryBtn, webViewBtn; // solo se ven si algo falla
     private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Runnable quitarPantallaEncendida = () -> getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     private final List<String> jsErrors = new ArrayList<>();
     private boolean loaded, problem;
     private static final int REQ_DICTAR = 42;
@@ -307,6 +309,14 @@ public class MainActivity extends Activity {
         /** La web avisa cada pocos segundos de si el PC está conectado; si deja de avisar, el teléfono vuelve a hablar. */
         @JavascriptInterface public void pcLink(boolean linked) {
             StepService.pcUntil = linked ? System.currentTimeMillis() + 20_000 : 0;
+            // Con el PC conectado la pantalla del móvil no se apaga sola (si la web deja de avisar durante 30 s, vuelve a apagarse normal)
+            runOnUiThread(() -> {
+                handler.removeCallbacks(quitarPantallaEncendida);
+                if (linked) {
+                    getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    handler.postDelayed(quitarPantallaEncendida, 30_000);
+                } else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            });
         }
 
         /** Abre el menú de compartir de Android (el navigator.share no funciona en el WebView). */
