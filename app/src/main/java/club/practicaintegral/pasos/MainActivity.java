@@ -50,6 +50,8 @@ public class MainActivity extends Activity {
     private WebView web;
     private LinearLayout overlay;
     private TextView overlayText;
+    private LinearLayout sellos;
+    private TextView verText;
     private Button retryBtn, webViewBtn; // solo se ven si algo falla
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable quitarPantallaEncendida = () -> getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -81,8 +83,7 @@ public class MainActivity extends Activity {
     private final Runnable liveSteps = new Runnable() {
         @Override public void run() {
             if (!problem && overlay.getVisibility() == View.VISIBLE) {
-                overlayText.setText(String.format(new java.util.Locale("es", "ES"), "%,d", StepStore.steps(MainActivity.this))
-                        + " pasos hoy\n\nCargando…");
+                overlayText.setText("Cargando…"); // ya no se enseñan los pasos aquí
             }
             handler.postDelayed(this, 2000);
         }
@@ -188,12 +189,36 @@ public class MainActivity extends Activity {
         overlayText.setGravity(Gravity.CENTER);
         overlayText.setText("Cargando…");
         overlay.addView(overlayText);
+        // Sellos y versiones (la de la web es la última que se abrió en este móvil)
+        float d = getResources().getDisplayMetrics().density;
+        sellos = new LinearLayout(this);
+        sellos.setOrientation(LinearLayout.HORIZONTAL);
+        sellos.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams lpS = new LinearLayout.LayoutParams(-2, -2);
+        lpS.setMargins((int) (4 * d), 0, (int) (4 * d), 0);
+        sellos.addView(sello("by Práctica Integral"), lpS);
+        sellos.addView(sello("with Grow Panel"), lpS);
+        LinearLayout.LayoutParams lpR = new LinearLayout.LayoutParams(-2, -2);
+        lpR.topMargin = pad;
+        overlay.addView(sellos, lpR);
+        verText = new TextView(this);
+        verText.setTextColor(0xFF94A3B8);
+        verText.setTextSize(14);
+        verText.setGravity(Gravity.CENTER);
+        String apk = "?";
+        try { apk = getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception ignored) {}
+        String webv = getSharedPreferences("amablepc_ui", MODE_PRIVATE).getString("webver", "");
+        verText.setText("APK " + apk + (webv.isEmpty() ? "" : " · web " + webv));
+        verText.setPadding(0, pad / 2, 0, 0);
+        overlay.addView(verText);
         retryBtn = new Button(this);
         retryBtn.setText("↻ Reintentar");
         retryBtn.setVisibility(View.GONE);
         retryBtn.setOnClickListener(v -> {
             loaded = false; problem = false; jsErrors.clear();
             retryBtn.setVisibility(View.GONE); webViewBtn.setVisibility(View.GONE);
+            if (sellos != null) sellos.setVisibility(View.VISIBLE);
+            if (verText != null) verText.setVisibility(View.VISIBLE);
             overlayText.setTextSize(17);
             overlayText.setText("Cargando…");
             if (web == null) { initWeb(); return; }
@@ -209,9 +234,27 @@ public class MainActivity extends Activity {
         return overlay;
     }
 
+    private TextView sello(String t) {
+        float d = getResources().getDisplayMetrics().density;
+        TextView v = new TextView(this);
+        v.setText(t);
+        v.setTextColor(0xFF94A3B8);
+        v.setTextSize(12);
+        v.setTypeface(null, android.graphics.Typeface.BOLD);
+        v.setPadding((int) (12 * d), (int) (6 * d), (int) (12 * d), (int) (6 * d));
+        android.graphics.drawable.GradientDrawable g = new android.graphics.drawable.GradientDrawable();
+        g.setColor(0x00000000);
+        g.setStroke((int) d, 0xFF334155);
+        g.setCornerRadius(999 * d);
+        v.setBackground(g);
+        return v;
+    }
+
     private void showProblem(String what) {
         if (loaded && !what.startsWith("La última vez")) return;
         problem = true;
+        if (sellos != null) sellos.setVisibility(View.GONE);
+        if (verText != null) verText.setVisibility(View.GONE);
         String wv = "?";
         PackageInfo p = WebView.getCurrentWebViewPackage();
         if (p != null) wv = p.packageName + " " + p.versionName;
@@ -396,6 +439,11 @@ public class MainActivity extends Activity {
                     sendDictation(null, "Este teléfono no tiene el dictado por voz de Google. Usa el micrófono del teclado.");
                 }
             });
+        }
+
+        @JavascriptInterface public void webVersion(String v) {
+            if (v != null && v.matches("^v[0-9.]+$"))
+                getSharedPreferences("amablepc_ui", MODE_PRIVATE).edit().putString("webver", v).apply();
         }
 
         @JavascriptInterface public String version() {
